@@ -1,98 +1,190 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+//import AsyncStorage from '@react-native-async-storage/async-storage';
+import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
+import { addDoc, collection, doc, onSnapshot, query, setDoc } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { Dimensions, Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { LineChart } from 'react-native-chart-kit';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { auth, db } from '../../firebase';
+import { serverTimestamp } from 'firebase/firestore';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const screenWidth = Dimensions.get('window').width;
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const [weight, setWeight] = useState('');
+  const [goal, setGoal] = useState('');
+  const [history, setHistory] = useState<any[]>([]);
+  const [result, setResult] = useState<number | null>(null);
+  const [user, setUser] = useState<any>(null);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, async (u) => {
+    if (u) {
+      setUser(u);
+    } else {
+      const res = await signInAnonymously(auth); // 👈 auto login
+      setUser(res.user);
+    }
+  });
+
+  return unsubscribe;
+}, []);
+
+useEffect(() => {
+  if (!user) return;
+
+  // 🔹 weights listener
+  const q = query(collection(db, "users", user.uid, "weights"));
+
+  const unsubscribeWeights = onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map(doc => doc.data());
+
+    // ✅ sort by date (important for chart)
+    data.sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    setHistory(data);
+  });
+
+  // 🔹 goal listener
+  const goalRef = doc(db, "users", user.uid);
+
+  const unsubscribeGoal = onSnapshot(goalRef, (docSnap) => {
+    if (docSnap.exists()) {
+      setGoal(docSnap.data().goal || '');
+    }
+  });
+
+  return () => {
+    unsubscribeWeights();
+    unsubscribeGoal();
+  };
+}, [user]);
+
+  const calculate = async () => {
+    Keyboard.dismiss();
+
+    const w = parseFloat(weight);
+    if (!w || !user) return;
+
+    const height = 175;
+    const age = 22;
+
+    const bmr = 10 * w + 6.25 * height - 5 * age - 161;
+    const target = Math.round(bmr * 1.2 - 500);
+
+    const today = new Date().toISOString().split('T')[0];
+
+    const newEntry = {
+      weight: w,
+      date: today,
+      createdAt: serverTimestamp()
+    };
+
+    setResult(target);
+
+    try {
+      await addDoc(
+        collection(db, "users", user.uid, "weights"), // 👈 user-specific path
+        newEntry
+      );
+    } catch (e) {
+      console.error(e);
+    }
+
+    setWeight('');
+  };
+
+  const progress = () => {
+    if (!goal || history.length === 0) return null;
+    const current = history[history.length - 1].weight;
+    return ((current - parseFloat(goal)) * 100 / current).toFixed(1);
+  };
+
+  const weeklyAvg = () => {
+    if (history.length < 7) return null;
+    const last7 = history.slice(-7);
+    const avg = last7.reduce((sum, item) => sum + item.weight, 0) / 7;
+    return avg.toFixed(1);
+  };
+
+  return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <SafeAreaView style={{ flex: 1, paddingTop: 10, backgroundColor: "#fff" }}>
+    <View style={styles.container}>
+      <Text style={styles.title}>Weight Tracker</Text>
+
+      <View style={styles.card}>
+        <TextInput
+          placeholder="Weight (kg)"
+          value={weight}
+          onChangeText={setWeight}
+          keyboardType="numeric"
+          style={styles.input}
+        />
+
+        <TextInput
+          placeholder="Goal weight (kg)"
+          value={goal}
+          onChangeText={async (g) => {
+            setGoal(g);
+
+            if (!user) return;
+
+            await setDoc(doc(db, "users", user.uid), {
+              goal: g
+            }, { merge: true });
+          }}
+          keyboardType="numeric"
+          style={styles.input}
+        />
+
+        <TouchableOpacity style={styles.button} onPress={calculate}>
+          <Text style={styles.buttonText}>Save</Text>
+        </TouchableOpacity>
+
+        {result && <Text style={styles.result}>🔥 {result} kcal/day</Text>}
+      </View>
+
+      {history.length > 1 && (
+        <LineChart
+          data={{
+            labels: history.map((h) => h.date.slice(5)),
+            datasets: [{ data: history.map((h) => h.weight) }],
+          }}
+          width={screenWidth - 40}
+          height={220}
+          chartConfig={{
+            backgroundGradientFrom: '#fff',
+            backgroundGradientTo: '#fff',
+            decimalPlaces: 1,
+            color: () => `#4A90E2`,
+          }}
+          style={{ borderRadius: 16 }}
+        />
+      )}
+
+      {progress() && (
+        <Text style={styles.info}>🎯 Progress: {progress()}%</Text>
+      )}
+
+      {weeklyAvg() && (
+        <Text style={styles.info}>📊 Weekly avg: {weeklyAvg()} kg</Text>
+      )}
+    </View>
+    </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  container: { flex: 1, padding: 20, backgroundColor: '#f5f7fb' },
+  title: { fontSize: 28, fontWeight: '700', textAlign: 'center', marginBottom: 10 },
+  card: { backgroundColor: '#fff', padding: 20, borderRadius: 16, marginBottom: 20 },
+  input: { borderWidth: 1, borderColor: '#eee', padding: 12, borderRadius: 10, marginBottom: 10 },
+  button: { backgroundColor: '#4A90E2', padding: 14, borderRadius: 10, alignItems: 'center' },
+  buttonText: { color: '#fff', fontWeight: '600' },
+  result: { marginTop: 10, textAlign: 'center' },
+  info: { marginTop: 10, textAlign: 'center', fontSize: 16 },
 });
