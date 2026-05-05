@@ -124,5 +124,5 @@ firebase.js     # firebase config
 
 ## 👤 Author
 
-Your Name
-GitHub: https://github.com/YOUR_USERNAME
+Rong Wei
+GitHub: https://github.com/Rose-Wei10/
