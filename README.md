@@ -1,50 +1,128 @@
-# Welcome to your Expo app 👋
+# 📱 Weight Tracker App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A simple cross-platform (iOS + Web) weight tracking app built with **Expo + React Native + Firebase**.
 
-## Get started
+---
 
-1. Install dependencies
+## ✨ Features
 
-   ```bash
-   npm install
-   ```
+* 📊 Track daily weight
+* ☁️ Real-time sync with Firebase
+* 👤 Anonymous user authentication
+* 📈 Weight history chart
+* 🎯 Goal tracking
+* 📉 Weekly average calculation
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+## 🛠 Tech Stack
 
-In the output, you'll find options to open the app in a
+* React Native (Expo)
+* Firebase (Firestore + Auth)
+* react-native-chart-kit
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 🚀 Getting Started
 
-## Get a fresh project
-
-When you're ready, run:
+### 1. Clone the repo
 
 ```bash
-npm run reset-project
+git clone https://github.com/YOUR_USERNAME/weight-tracker-app.git
+cd weight-tracker-app
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-## Learn more
+### 2. Install dependencies
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm install
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+---
 
-## Join the community
+### 3. Setup Firebase
 
-Join our community of developers creating universal apps.
+Go to: https://console.firebase.google.com/
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. Create a project
+2. Add a **Web App**
+3. Copy Firebase config
+
+Update `firebase.js`:
+
+```js
+const firebaseConfig = {
+  apiKey: "...",
+  authDomain: "...",
+  projectId: "...",
+  ...
+};
+```
+
+---
+
+### 4. Enable Firebase services
+
+#### Authentication
+
+* Go to **Authentication → Sign-in method**
+* Enable **Anonymous**
+
+#### Firestore
+
+* Go to **Firestore Database**
+* Create database (test mode)
+
+---
+
+### 5. Run the app
+
+```bash
+npx expo start
+```
+
+* Press `i` → iOS simulator
+* Press `w` → Web
+* Or scan QR with Expo Go
+
+---
+
+## 📂 Project Structure
+
+```
+app/
+  (tabs)/
+    index.tsx   # main screen
+firebase.js     # firebase config
+```
+
+---
+
+## 🔐 Notes
+
+* Firebase config is required for the app to run
+* Each user’s data is stored separately using Firebase Auth
+
+---
+
+## 📸 Screenshots
+
+*Add your app screenshots here*
+
+---
+
+## 🚀 Future Improvements
+
+* Google / Apple login
+* Edit & delete entries
+* Better UI/UX
+* Dark mode
+
+---
+
+## 👤 Author
+
+Your Name
+GitHub: https://github.com/YOUR_USERNAME
