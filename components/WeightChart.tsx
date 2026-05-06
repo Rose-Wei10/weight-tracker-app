@@ -1,48 +1,58 @@
 import React, { useMemo, useState } from 'react';
 import {
     Dimensions,
-    StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { PanGestureHandler } from 'react-native-gesture-handler';
+import { styles } from '../css/weightChartStyles';
+import { Lang, translations } from '../translations';
 
-export default function WeightChart({ history = [], goal }: any) {
-  const screenWidth = Dimensions.get('window').width;
-  const chartWidth = screenWidth - 70;
+type Props = {
+  history: any[];
+  goal: string;
+  lang: Lang;
+  user?: any;
+  loading?: boolean;
+};
+
+export default function WeightChart({ history = [], goal, lang }: Props) {
+    const screenWidth = Dimensions.get('window').width;
+    const chartWidth = screenWidth - 70;
+    const t = translations[lang];
 
   // 📊 State
-  const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+    const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  // 📅 Filter data based on view
-  const filtered = useMemo(() => {
-    if (!history || history.length === 0) return [];
+    // 📅 Filter data based on view
+    const filtered = useMemo(() => {
+        if (!history || history.length === 0) return [];
 
-    const now = new Date(currentDate);
+        const now = new Date(currentDate);
 
-    let result = [];
+        let result = [];
 
-    if (viewMode === 'week') {
-        const start = new Date(now);
-        start.setDate(now.getDate() - 6);
+        if (viewMode === 'week') {
+            const start = new Date(now);
+            start.setDate(now.getDate() - 6);
 
-        result = history.filter((h: any) => {
-        const d = new Date(h.date);
-        return d >= start && d <= now;
-        });
-    } else {
-        result = history.filter((h: any) => {
-        const d = new Date(h.date);
-        return (
-            d.getMonth() === now.getMonth() &&
-            d.getFullYear() === now.getFullYear()
-        );
-        });
-    }
+            result = history.filter((h: any) => {
+            const d = new Date(h.date);
+            return d >= start && d <= now;
+            });
+        } else {
+            result = history.filter((h: any) => {
+            const d = new Date(h.date);
+            return (
+                d.getMonth() === now.getMonth() &&
+                d.getFullYear() === now.getFullYear()
+            );
+            });
+        }
 
     // ✅ FALLBACK (THIS FIXES YOUR BUG)
     if (result.length === 0) {
@@ -69,21 +79,27 @@ export default function WeightChart({ history = [], goal }: any) {
   }
 
   // 📈 Chart dataset
-  const data = {
+    const goalNumber = parseFloat(goal);
+
+    const data = {
     labels,
     datasets: [
-      {
+        {
         data: weights,
         strokeWidth: 3,
-      },
-      {
-        data: weights.map(() => goal),
-        withDots: true,
-        color: () => 'red',
-        strokeWidth: 2,
-      },
+        },
+        ...(goalNumber
+        ? [
+            {
+                data: weights.map(() => goalNumber),
+                withDots: true,
+                color: () => 'red',
+                strokeWidth: 2,
+            },
+            ]
+        : []),
     ],
-  };
+    };
 
   // 👆 Swipe handling
   const handleSwipe = (e: any) => {
@@ -117,7 +133,7 @@ export default function WeightChart({ history = [], goal }: any) {
           <Text
             style={viewMode === 'week' ? styles.activeTab : styles.tab}
           >
-            Week
+            {t.week}
           </Text>
         </TouchableOpacity>
 
@@ -125,7 +141,7 @@ export default function WeightChart({ history = [], goal }: any) {
           <Text
             style={viewMode === 'month' ? styles.activeTab : styles.tab}
           >
-            Month
+            {t.month}
           </Text>
         </TouchableOpacity>
       </View>
@@ -180,72 +196,7 @@ export default function WeightChart({ history = [], goal }: any) {
       <Text style={styles.latest}>
         {weights[weights.length - 1]} kg
       </Text>
-      <Text style={styles.sub}>Latest</Text>
+      <Text style={styles.sub}>{t.latest}</Text>
     </View>
   );
 }
-
-// 🎨 Styles
-const styles = StyleSheet.create({
-  emptyBox: {
-    height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  rangeText: {
-    textAlign: 'center',
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 10,
-  },
-
-  toggleRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 10,
-  },
-
-  tab: {
-    marginHorizontal: 10,
-    color: '#999',
-    fontSize: 14,
-  },
-
-  activeTab: {
-    marginHorizontal: 10,
-    color: '#007AFF',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-
-  tooltip: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: '#000',
-    padding: 8,
-    borderRadius: 8,
-  },
-
-  tooltipText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-
-  tooltipDate: {
-    color: '#ccc',
-    fontSize: 12,
-  },
-
-  latest: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 10,
-    fontStyle: 'italic',
-  },
-
-  sub: {
-    color: '#999',
-  },
-});

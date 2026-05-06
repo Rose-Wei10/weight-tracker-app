@@ -1,8 +1,8 @@
 # 📱 Weight Tracker App
 
-A simple, clean, and real-time **weight tracking app** built with **Expo (React Native)** and **Firebase**.
+A clean, modern **weight tracking app** built with **Expo (React Native)** and **Firebase**, supporting **real-time sync** and **bilingual (English / 中文)** UI.
 
-> ⚠️ **Note:** This app is currently supported for **iOS and Web only**. Android is not supported at this time.
+> ⚠️ This app is currently supported for **iOS and Web only**. Android is not supported.
 
 ---
 
@@ -10,43 +10,46 @@ A simple, clean, and real-time **weight tracking app** built with **Expo (React 
 
 * 🔐 **Authentication (Firebase Auth)**
 
-  * Email & password login / registration 
-  * Persistent session with auto-redirect 
+  * Anonymous login
+  * Auto session persistence
 
 * ⚖️ **Daily Weight Tracking**
 
   * Log weight once per day
-  * Prevent duplicate entries for the same date 
+  * Edit and delete entries
+  * Prevent duplicate daily entries
 
 * 📊 **Real-time Sync (Firestore)**
 
-  * All data updates instantly across sessions/devices
-  * Uses `onSnapshot` listeners for live updates 
+  * Instant updates across sessions/devices
+  * No manual refresh needed
 
-* 📈 **Interactive Weight Chart**
+* 📈 **Interactive Chart**
 
-  * Weekly & monthly views
+  * Weekly / Monthly view
   * Swipe to navigate time ranges
-  * Tap points to view exact values 
+  * Goal line visualization
+  * Tap points to view exact values
 
 * 🎯 **Goal Tracking**
 
-  * Set and update your goal weight
-  * Automatically calculates % progress 
+  * Set and update goal weight
+  * Progress percentage calculation
 
 * 🔥 **Streak System**
 
-  * Tracks consecutive days of logging
+  * Tracks consecutive logging days
 
 * 📊 **Insights**
 
-  * Weight change summary
+  * Total weight change (gain/loss)
   * Weekly average
-  * Total tracking days
+  * Total tracked days
 
-* 📱 **Haptic Feedback**
+* 🌍 **Bilingual Support**
 
-  * Subtle vibration when saving weight
+  * English / Chinese toggle
+  * Persistent language preference
 
 ---
 
@@ -57,64 +60,49 @@ A simple, clean, and real-time **weight tracking app** built with **Expo (React 
 * **Backend:** Firebase
 
   * Authentication
-  * Firestore (database)
+  * Firestore (real-time database)
 * **Charts:** react-native-chart-kit
 * **Gestures:** react-native-gesture-handler
+* **Storage:** AsyncStorage
 
 ---
 
 ## 📂 Project Structure
 
-```
+```bash
 app/
- ├── (tabs)/
- │    └── index.tsx        # Main home screen (tracking + insights)
- ├── login.tsx             # Login & register screen
- ├── _layout.tsx           # Auth-based routing
+  (tabs)/
+    index.tsx           # Main screen
+  _layout.tsx           # Auth routing
+
 components/
- └── WeightChart.tsx       # Chart component
-firebase.ts                # Firebase config
+  WeightChart.tsx       # Chart component
+
+css/
+  indexStyles.ts        # Styles for main screen
+  weightChartStyles.ts  # Styles for chart
+
+translations.ts         # Language dictionary
+firebase.ts             # Firebase config
 ```
 
 ---
 
-## 🔥 Core Logic Highlights
+## 🌍 Language System
 
-### Auth Flow
+The app uses a lightweight custom translation system:
 
-* Uses `onAuthStateChanged` to detect login state
-* Automatically switches between:
+* Centralized in `translations.ts`
+* Language state managed in main screen
+* Passed down via props to components
+* Stored locally using AsyncStorage
 
-  * Logged-out → Login screen
-  * Logged-in → Main app 
+Example:
 
-### Weight Logging
-
-* Stores data under:
-
+```ts
+const t = translations[lang];
+<Text>{t.weight}</Text>
 ```
-users/{userId}/weights
-```
-
-* Each entry:
-
-```
-{
-  weight: number,
-  date: "YYYY-MM-DD",
-  createdAt: timestamp
-}
-```
-
-### Goal Storage
-
-* Stored at:
-
-```
-users/{userId}
-```
-
-* Uses Firestore `setDoc` with merge
 
 ---
 
@@ -122,7 +110,7 @@ users/{userId}
 
 Create a `.env` file:
 
-```
+```env
 EXPO_PUBLIC_FIREBASE_API_KEY=
 EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=
 EXPO_PUBLIC_FIREBASE_PROJECT_ID=
@@ -131,21 +119,19 @@ EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 EXPO_PUBLIC_FIREBASE_APP_ID=
 ```
 
-Used in: `firebase.ts` 
-
 ---
 
 ## 🚀 Getting Started
 
 ### 1. Install dependencies
 
-```
+```bash
 npm install
 ```
 
 ### 2. Start the app
 
-```
+```bash
 npx expo start
 ```
 
@@ -154,33 +140,30 @@ npx expo start
 * iOS Simulator 🍎
 * Web 🌐
 
-> Android is not supported currently.
+> Android is not supported.
 
 ---
 
-## 📌 Future Improvements
+## 📌 Key Design Decisions
 
-* Edit existing weight entries
-* Better error handling (some alerts are currently minimal)
-* Dark mode support
-* Export data (CSV / health apps)
-
----
-
-## 🧠 Notes
-
-* The app uses **real-time listeners**, so no manual refresh is needed
-* Data is scoped per user via Firebase Auth UID
-* UI is optimized for simplicity and fast daily logging
+* Uses **real-time listeners (`onSnapshot`)** instead of manual fetch
+* Keeps **single source of truth for language state**
+* Separates **UI styles into dedicated files**
+* Avoids heavy i18n libraries for simplicity
 
 ---
 
-## 📄 License
+## 🚀 Future Improvements
 
-MIT
+* Dark mode
+* Export data (CSV / Apple Health)
+* Better chart styling (dashed goal line, animations)
+* Multi-language expansion
+* Account linking (Google / Apple)
 
 ---
 
 ## 👤 Author
 
-Built by Rong Wei 
+Rong Wei
+GitHub: https://github.com/Rose-Wei10/

@@ -1,12 +1,15 @@
 import WeightChart from '@/components/WeightChart';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { addDoc, collection, deleteDoc, doc, onSnapshot, query, serverTimestamp, setDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
-import { Alert, Dimensions, Keyboard, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, Keyboard, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { styles } from '../../css/indexStyles';
 import { auth, db } from '../../firebase';
+import { Lang, translations } from '../../translations';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -25,6 +28,17 @@ export default function HomeScreen() {
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+  const [lang, setLang] = useState<Lang>('en');
+  const t = translations[lang];
+  useEffect(() => {
+    AsyncStorage.getItem('lang').then((l) => {
+      if (l) setLang(l as Lang);
+    });
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.setItem('lang', lang);
+  }, [lang]);
 
   // ✅ Auto login (anonymous)
   useEffect(() => {
@@ -197,18 +211,26 @@ export default function HomeScreen() {
           keyboardShouldPersistTaps="handled"
         >
         {/* <View style={styles.container}> */}
-          <Text style={styles.title}>Weight</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={styles.title}>{t.weight}</Text>
+
+          <TouchableOpacity onPress={() => setLang(lang === 'en' ? 'zh' : 'en')}>
+            <Text style={styles.lang}>
+              {lang === 'en' ? '中文' : 'EN'}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
 
           {/* 📈 Chart */}
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Progress</Text>
-            <WeightChart history={history} goal={goal} user={user} loading={loadingData} />
+            <Text style={styles.sectionTitle}>{t.progress}</Text>
+            <WeightChart history={history} goal={goal} user={user} loading={loadingData} lang={lang} />
           </View>
 
           {/* 📋 Weight History */}
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>History</Text>
+            <Text style={styles.sectionTitle}>{t.history}</Text>
 
             {/* 📋 List */}
             {history.slice().reverse().map((item) => (
@@ -219,11 +241,11 @@ export default function HomeScreen() {
 
                 <View style={{ flexDirection: 'row', gap: 12 }}>
                   <TouchableOpacity onPress={() => handleEdit(item)}>
-                    <Text style={styles.edit}>Edit</Text>
+                    <Text style={styles.edit}>{t.edit}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity onPress={() => handleDelete(item.id)}>
-                    <Text style={styles.delete}>Delete</Text>
+                    <Text style={styles.delete}>{t.delete}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -232,7 +254,7 @@ export default function HomeScreen() {
             {/* ➕ Add Weight (BOTTOM) */}
             <View style={styles.addSection}>
               <TextInput
-                placeholder="Add weight (e.g. 76.5)"
+                placeholder={t.placeHolder}
                 value={weight}
                 onChangeText={setWeight}
                 keyboardType="numeric"
@@ -240,7 +262,7 @@ export default function HomeScreen() {
               />
 
               <TouchableOpacity style={styles.addBtn} onPress={calculate}>
-                <Text style={styles.addBtnText}>+ Add Weight</Text>
+                <Text style={styles.addBtnText}>+ {t.addWeight}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -249,7 +271,7 @@ export default function HomeScreen() {
 
           {/* 🎯 Goal + Progress */}
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Goal</Text>
+            <Text style={styles.sectionTitle}>{t.goal}</Text>
 
             <TextInput
               value={goal}
@@ -264,7 +286,7 @@ export default function HomeScreen() {
 
             {progress() && (
               <Text style={styles.progressText}>
-                {progress()}% to goal
+                {progress()}% {t.toGoal}
               </Text>
             )}
           </View>
@@ -283,38 +305,38 @@ export default function HomeScreen() {
               fontWeight: '700',
               marginTop: 4,
             }}>
-              {getStreak()} Day Streak
+              {getStreak()} {t.streak}
             </Text>
 
             <Text style={{
               color: '#888',
               marginTop: 2,
             }}>
-              Keep it going!
+             {t.keepGoing}
             </Text>
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Insights</Text>
+            <Text style={styles.sectionTitle}>{t.insights}</Text>
 
             {history.length > 1 && (
               <Text style={styles.infoText}>
                 {history[history.length - 1].weight <
                 history[0].weight
-                  ? `⬇️ You lost ${(history[0].weight - history[history.length - 1].weight).toFixed(1)} kg`
-                  : `⬆️ You gained ${(history[history.length - 1].weight - history[0].weight).toFixed(1)} kg`}
+                  ? `⬇️ ${t.lost} ${(history[0].weight - history[history.length - 1].weight).toFixed(1)} kg`
+                  : `⬆️ ${t.gained} ${(history[history.length - 1].weight - history[0].weight).toFixed(1)} kg`}
               </Text>
             )}
 
             {weeklyAvg() && (
               <Text style={styles.infoText}>
-                📊 Weekly avg: {weeklyAvg()} kg
+                📊 {t.weeklyAvg}: {weeklyAvg()} kg
               </Text>
             )}
 
             {history.length >= 3 && (
               <Text style={styles.infoText}>
-                🔥 {history.length} days tracked
+                🔥 {history.length} {t.daysTracked}
               </Text>
             )}
           </View>
@@ -333,123 +355,3 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: '#F2F2F7',
-  },
-
-  title: {
-    fontSize: 34,
-    fontWeight: '700',
-    marginBottom: 20,
-  },
-
-  card: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 20,
-    marginBottom: 16,
-
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-
-  input: {
-    backgroundColor: '#F2F2F7',
-    padding: 14,
-    borderRadius: 12,
-    fontSize: 16,
-    marginBottom: 10,
-  },
-
-  primaryBtn: {
-    backgroundColor: '#007AFF',
-    padding: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-
-  primaryText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-
-  progressText: {
-    marginTop: 8,
-    fontSize: 16,
-    color: '#007AFF',
-    fontWeight: '500',
-  },
-
-  logout: {
-    textAlign: 'center',
-    marginTop: 20,
-    color: '#FF3B30',
-    fontSize: 16,
-  },
-    infoText: {
-    fontSize: 15,
-    marginTop: 6,
-    color: '#333',
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#F2F2F7',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-
-  rowText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-
-  edit: {
-    color: '#007AFF',
-    fontWeight: '600',
-  },
-
-  delete: {
-    color: '#FF3B30',
-    fontWeight: '600',
-  },
-  addSection: {
-    marginTop: 12,
-    borderTopWidth: 1,
-    borderColor: '#eee',
-    paddingTop: 12,
-  },
-
-  addInput: {
-    backgroundColor: '#F2F2F7',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 8,
-  },
-
-  addBtn: {
-    backgroundColor: '#007AFF',
-    padding: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-
-  addBtnText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-});
