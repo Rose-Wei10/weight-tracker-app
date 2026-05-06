@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { auth } from '../firebase';
 
 export default function RootLayout() {
@@ -10,7 +11,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
-      console.log("ROOT USER:", u);
+      //console.log("ROOT USER:", u);
       setUser(u);
       setLoading(false);
     });
@@ -27,6 +28,7 @@ export default function RootLayout() {
   }
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <Stack
       key={user ? 'logged-in' : 'logged-out'} // 👈 CRITICAL FIX
       screenOptions={{ headerShown: false }}
@@ -37,5 +39,6 @@ export default function RootLayout() {
         <Stack.Screen name="login" />
       )}
     </Stack>
+    </GestureHandlerRootView>
   );
 }

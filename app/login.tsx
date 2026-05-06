@@ -38,8 +38,8 @@ export default function LoginScreen() {
       // 🔥 IMPORTANT: redirect to home
       router.replace('/');
     } catch (e: any) {
-      console.log(e);
-      alert(e.message);
+    //   console.log(e);
+    //   alert(e.message);
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ export default function LoginScreen() {
       // 🔥 IMPORTANT: redirect after register
       router.replace('/');
     } catch (e: any) {
-      console.log(e);
+    //   console.log(e);
 
       // nicer messages
       if (e.code === 'auth/email-already-in-use') {

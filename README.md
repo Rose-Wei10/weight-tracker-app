@@ -1,91 +1,65 @@
 # 📱 Weight Tracker App
 
-A simple cross-platform (iOS + Web) weight tracking app built with **Expo + React Native + Firebase**.
+A simple, clean, and real-time **weight tracking app** built with **Expo (React Native)** and **Firebase**.
+
+> ⚠️ **Note:** This app is currently supported for **iOS and Web only**. Android is not supported at this time.
 
 ---
 
 ## ✨ Features
 
-* 📊 Track daily weight
-* ☁️ Real-time sync with Firebase
-* 👤 Anonymous user authentication
-* 📈 Weight history chart
-* 🎯 Goal tracking
-* 📉 Weekly average calculation
+* 🔐 **Authentication (Firebase Auth)**
+
+  * Email & password login / registration 
+  * Persistent session with auto-redirect 
+
+* ⚖️ **Daily Weight Tracking**
+
+  * Log weight once per day
+  * Prevent duplicate entries for the same date 
+
+* 📊 **Real-time Sync (Firestore)**
+
+  * All data updates instantly across sessions/devices
+  * Uses `onSnapshot` listeners for live updates 
+
+* 📈 **Interactive Weight Chart**
+
+  * Weekly & monthly views
+  * Swipe to navigate time ranges
+  * Tap points to view exact values 
+
+* 🎯 **Goal Tracking**
+
+  * Set and update your goal weight
+  * Automatically calculates % progress 
+
+* 🔥 **Streak System**
+
+  * Tracks consecutive days of logging
+
+* 📊 **Insights**
+
+  * Weight change summary
+  * Weekly average
+  * Total tracking days
+
+* 📱 **Haptic Feedback**
+
+  * Subtle vibration when saving weight
 
 ---
 
 ## 🛠 Tech Stack
 
-* React Native (Expo)
-* Firebase (Firestore + Auth)
-* react-native-chart-kit
+* **Frontend:** Expo + React Native
+* **Routing:** Expo Router
+* **Backend:** Firebase
 
----
-
-## 🚀 Getting Started
-
-### 1. Clone the repo
-
-```bash
-git clone https://github.com/YOUR_USERNAME/weight-tracker-app.git
-cd weight-tracker-app
-```
-
----
-
-### 2. Install dependencies
-
-```bash
-npm install
-```
-
----
-
-### 3. Setup Firebase
-
-Go to: https://console.firebase.google.com/
-
-1. Create a project
-2. Add a **Web App**
-3. Copy Firebase config
-
-Update `firebase.js`:
-
-```js
-const firebaseConfig = {
-  apiKey: "...",
-  authDomain: "...",
-  projectId: "...",
-  ...
-};
-```
-
----
-
-### 4. Enable Firebase services
-
-#### Authentication
-
-* Go to **Authentication → Sign-in method**
-* Enable **Anonymous**
-
-#### Firestore
-
-* Go to **Firestore Database**
-* Create database (test mode)
-
----
-
-### 5. Run the app
-
-```bash
-npx expo start
-```
-
-* Press `i` → iOS simulator
-* Press `w` → Web
-* Or scan QR with Expo Go
+  * Authentication
+  * Firestore (database)
+* **Charts:** react-native-chart-kit
+* **Gestures:** react-native-gesture-handler
 
 ---
 
@@ -93,36 +67,120 @@ npx expo start
 
 ```
 app/
-  (tabs)/
-    index.tsx   # main screen
-firebase.js     # firebase config
+ ├── (tabs)/
+ │    └── index.tsx        # Main home screen (tracking + insights)
+ ├── login.tsx             # Login & register screen
+ ├── _layout.tsx           # Auth-based routing
+components/
+ └── WeightChart.tsx       # Chart component
+firebase.ts                # Firebase config
 ```
 
 ---
 
-## 🔐 Notes
+## 🔥 Core Logic Highlights
 
-* Firebase config is required for the app to run
-* Each user’s data is stored separately using Firebase Auth
+### Auth Flow
+
+* Uses `onAuthStateChanged` to detect login state
+* Automatically switches between:
+
+  * Logged-out → Login screen
+  * Logged-in → Main app 
+
+### Weight Logging
+
+* Stores data under:
+
+```
+users/{userId}/weights
+```
+
+* Each entry:
+
+```
+{
+  weight: number,
+  date: "YYYY-MM-DD",
+  createdAt: timestamp
+}
+```
+
+### Goal Storage
+
+* Stored at:
+
+```
+users/{userId}
+```
+
+* Uses Firestore `setDoc` with merge
 
 ---
 
-## 📸 Screenshots
+## ⚙️ Environment Variables
 
-*Add your app screenshots here*
+Create a `.env` file:
+
+```
+EXPO_PUBLIC_FIREBASE_API_KEY=
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+EXPO_PUBLIC_FIREBASE_APP_ID=
+```
+
+Used in: `firebase.ts` 
 
 ---
 
-## 🚀 Future Improvements
+## 🚀 Getting Started
 
-* Google / Apple login
-* Edit & delete entries
-* Better UI/UX
-* Dark mode
+### 1. Install dependencies
+
+```
+npm install
+```
+
+### 2. Start the app
+
+```
+npx expo start
+```
+
+### 3. Run on:
+
+* iOS Simulator 🍎
+* Web 🌐
+
+> Android is not supported currently.
+
+---
+
+## 📌 Future Improvements
+
+* Edit existing weight entries
+* Better error handling (some alerts are currently minimal)
+* Dark mode support
+* Export data (CSV / health apps)
+
+---
+
+## 🧠 Notes
+
+* The app uses **real-time listeners**, so no manual refresh is needed
+* Data is scoped per user via Firebase Auth UID
+* UI is optimized for simplicity and fast daily logging
+
+---
+
+## 📄 License
+
+MIT
 
 ---
 
 ## 👤 Author
 
-Rong Wei
-GitHub: https://github.com/Rose-Wei10/
+Built by Rong Wei 
