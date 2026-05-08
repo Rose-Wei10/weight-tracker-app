@@ -1,15 +1,15 @@
 import WeightChart from '@/components/WeightChart';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { addDoc, collection, deleteDoc, doc, onSnapshot, query, serverTimestamp, setDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { Alert, Dimensions, Keyboard, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLanguage } from '../../context/LanguageContext';
 import { styles } from '../../css/indexStyles';
 import { auth, db } from '../../firebase';
-import { Lang, translations } from '../../translations';
+import { translations } from '../../translations';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -21,6 +21,8 @@ export default function HomeScreen() {
   const [result, setResult] = useState<number | null>(null);
   const [user, setUser] = useState<any>(null);
   const [loadingData, setLoadingData] = useState(true);
+  const [target, setTarget] = useState<number | null>(null);
+  const [eaten, setEaten] = useState(0);
   const getLocalDate = () => {
     const d = new Date();
     const year = d.getFullYear();
@@ -28,17 +30,9 @@ export default function HomeScreen() {
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
-  const [lang, setLang] = useState<Lang>('en');
+  const { lang } = useLanguage();
   const t = translations[lang];
-  useEffect(() => {
-    AsyncStorage.getItem('lang').then((l) => {
-      if (l) setLang(l as Lang);
-    });
-  }, []);
 
-  useEffect(() => {
-    AsyncStorage.setItem('lang', lang);
-  }, [lang]);
 
   // ✅ Auto login (anonymous)
   useEffect(() => {
@@ -79,6 +73,21 @@ export default function HomeScreen() {
     const unsubscribeGoal = onSnapshot(goalRef, (docSnap) => {
       if (docSnap.exists()) {
         setGoal(docSnap.data().goal || '');
+          const data = docSnap.data();
+
+        // 🔥 1. 读 target
+        if (data.profile?.target) {
+          setTarget(data.profile.target);
+        }
+
+        // 🔥 2. 读今日吃了多少
+        const today = getLocalDate();
+
+        if (data.daily?.date === today) {
+          setEaten(data.daily.eaten || 0);
+        } else {
+          setEaten(0); // 新的一天自动清零
+        }
       }
     });
 
@@ -87,6 +96,11 @@ export default function HomeScreen() {
       unsubscribeGoal();
     };
   }, [user]);
+
+  const remaining = () => {
+    if (!target) return null;
+    return target - eaten;
+  };
 
   const calculate = async () => {
     Keyboard.dismiss();
@@ -211,14 +225,28 @@ export default function HomeScreen() {
           keyboardShouldPersistTaps="handled"
         >
         {/* <View style={styles.container}> */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <View >
           <Text style={styles.title}>{t.weight}</Text>
+        </View>
 
-          <TouchableOpacity onPress={() => setLang(lang === 'en' ? 'zh' : 'en')}>
-            <Text style={styles.lang}>
-              {lang === 'en' ? '中文' : 'EN'}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Today</Text>
+
+          {target ? (
+            <>
+              <Text style={{ fontSize: 18, fontWeight: '600' }}>
+                🔥 Target: {target} kcal
+              </Text>
+
+              <Text style={{ fontSize: 18, marginTop: 6 }}>
+                🍽 Remaining: {remaining()} kcal
+              </Text>
+            </>
+          ) : (
+            <Text style={{ color: '#888' }}>
+              Set your calories target first
             </Text>
-          </TouchableOpacity>
+          )}
         </View>
 
 
@@ -341,17 +369,10 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* 🔓 Logout */}
-          <TouchableOpacity onPress={async () => {
-            await signOut(auth);
-            router.replace('/login');
-          }}>
-            <Text style={styles.logout}>Log out</Text>
-          </TouchableOpacity>
+
         {/* </View> */}
         </ScrollView>
       </SafeAreaView>
     // </TouchableWithoutFeedback>
   );
 }
-

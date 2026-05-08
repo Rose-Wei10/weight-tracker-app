@@ -1,112 +1,157 @@
 # 📱 Weight Tracker App
 
-A clean, modern **weight tracking app** built with **Expo (React Native)** and **Firebase**, supporting **real-time sync** and **bilingual (English / 中文)** UI.
+A modern **weight loss & calorie tracking app** built with **Expo (React Native)** and **Firebase**, featuring:
 
-> ⚠️ This app is currently supported for **iOS and Web only**. Android is not supported.
+* ⚖️ Weight tracking
+* 🔥 Calorie management
+* 📈 Interactive charts
+* ☁️ Real-time cloud sync
+* 🌍 English / Chinese support
 
----
-
-## ✨ Features
-
-* 🔐 **Authentication (Firebase Auth)**
-
-  * Anonymous login
-  * Auto session persistence
-
-* ⚖️ **Daily Weight Tracking**
-
-  * Log weight once per day
-  * Edit and delete entries
-  * Prevent duplicate daily entries
-
-* 📊 **Real-time Sync (Firestore)**
-
-  * Instant updates across sessions/devices
-  * No manual refresh needed
-
-* 📈 **Interactive Chart**
-
-  * Weekly / Monthly view
-  * Swipe to navigate time ranges
-  * Goal line visualization
-  * Tap points to view exact values
-
-* 🎯 **Goal Tracking**
-
-  * Set and update goal weight
-  * Progress percentage calculation
-
-* 🔥 **Streak System**
-
-  * Tracks consecutive logging days
-
-* 📊 **Insights**
-
-  * Total weight change (gain/loss)
-  * Weekly average
-  * Total tracked days
-
-* 🌍 **Bilingual Support**
-
-  * English / Chinese toggle
-  * Persistent language preference
+> ⚠️ Currently optimized for **iOS and Web only**. Android is not supported yet.
 
 ---
 
-## 🛠 Tech Stack
+# ✨ Features
+
+## ⚖️ Weight Tracking
+
+* Daily weight logging
+* Edit & delete entries
+* Weight history list
+* Goal weight tracking
+* Weekly average calculation
+* Consecutive logging streak system
+
+## 📈 Interactive Chart
+
+* Weekly / Monthly views
+* Swipe gesture navigation
+* Goal line visualization
+* Tap chart points for details
+
+## 🔥 Calorie Tracking
+
+* TDEE calculator
+* Daily calorie target
+* Remaining calorie calculation
+* Food logging system
+* Smart food suggestions
+* Frequently eaten foods shortcuts
+
+## ☁️ Firebase Integration
+
+* Real-time Firestore sync
+* Persistent cloud storage
+* User-specific data separation
+* Auto authentication state handling
+
+## 🌍 Bilingual Support
+
+* English / Chinese toggle
+* Persistent language selection
+* Shared translation system
+
+## 👤 Account System
+
+* User profile management
+* Goal weight setup
+* Diet level preferences
+* Language preferences
+
+---
+
+# 🛠 Tech Stack
 
 * **Frontend:** Expo + React Native
 * **Routing:** Expo Router
 * **Backend:** Firebase
 
-  * Authentication
-  * Firestore (real-time database)
+  * Firestore
+  * Firebase Authentication
 * **Charts:** react-native-chart-kit
 * **Gestures:** react-native-gesture-handler
 * **Storage:** AsyncStorage
+* **Haptics:** expo-haptics
 
 ---
 
-## 📂 Project Structure
+# 📂 Project Structure
 
 ```bash
 app/
   (tabs)/
-    index.tsx           # Main screen
-  _layout.tsx           # Auth routing
+    home.tsx         # Weight tracking screen
+    calories.tsx     # Calories & food tracker
+    account.tsx      # Account settings
+
+  index.tsx          # Auth redirect
+  login.tsx          # Login screen
 
 components/
-  WeightChart.tsx       # Chart component
+  WeightChart.tsx    # Interactive weight chart
 
 css/
-  indexStyles.ts        # Styles for main screen
-  weightChartStyles.ts  # Styles for chart
+  indexStyles.ts
+  weightChartStyles.ts
 
-translations.ts         # Language dictionary
-firebase.ts             # Firebase config
+constants/
+  food.ts            # Food database
+
+translations.ts      # Language dictionary
+
+firebase.ts          # Firebase config
 ```
 
 ---
 
-## 🌍 Language System
+# 🌍 Translation System
 
-The app uses a lightweight custom translation system:
-
-* Centralized in `translations.ts`
-* Language state managed in main screen
-* Passed down via props to components
-* Stored locally using AsyncStorage
-
-Example:
+The app uses a lightweight custom bilingual system:
 
 ```ts
 const t = translations[lang];
-<Text>{t.weight}</Text>
 ```
+
+Features:
+
+* Shared translation dictionary
+* Component-level language support
+* Persistent language saving using AsyncStorage
+
+Supported languages:
+
+* English 🇺🇸
+* 中文 🇨🇳
 
 ---
 
-## ⚙️ Environment Variables
+# 🔥 Main Screens
+
+## 🏠 Home
+
+* Weight tracking
+* Progress chart
+* Goal tracking
+* Insights & streaks
+
+## 🍱 Calories
+
+* TDEE calculator
+* Daily calorie tracking
+* Food logging
+* Smart food recommendations
+
+## 👤 Account
+
+* User profile
+* Goal settings
+* Diet preferences
+* Language settings
+
+---
+
+# ⚙️ Environment Variables
 
 Create a `.env` file:
 
@@ -121,49 +166,61 @@ EXPO_PUBLIC_FIREBASE_APP_ID=
 
 ---
 
-## 🚀 Getting Started
+# 🚀 Getting Started
 
-### 1. Install dependencies
+## 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Start the app
+---
+
+## 2. Start the app
 
 ```bash
 npx expo start
 ```
 
-### 3. Run on:
+---
+
+## 3. Run on
 
 * iOS Simulator 🍎
-* Web 🌐
+* Web Browser 🌐
 
-> Android is not supported.
-
----
-
-## 📌 Key Design Decisions
-
-* Uses **real-time listeners (`onSnapshot`)** instead of manual fetch
-* Keeps **single source of truth for language state**
-* Separates **UI styles into dedicated files**
-* Avoids heavy i18n libraries for simplicity
+> Android is currently unsupported.
 
 ---
 
-## 🚀 Future Improvements
+# 📊 Firebase Structure
 
+```bash
+users/
+  uid/
+    profile/
+    daily/
+    weights/
+    foods/
+```
+
+---
+
+# 🎯 Future Improvements
+
+* Apple Health integration
 * Dark mode
-* Export data (CSV / Apple Health)
-* Better chart styling (dashed goal line, animations)
-* Multi-language expansion
-* Account linking (Google / Apple)
+* Better chart animations
+* AI food recognition
+* Barcode scanning
+* Nutrition breakdown
+* Data export (CSV / PDF)
 
 ---
 
-## 👤 Author
+# 👤 Author
 
 Rong Wei
-GitHub: https://github.com/Rose-Wei10/
+
+GitHub:
+[Rose-Wei10](https://github.com/Rose-Wei10?utm_source=chatgpt.com)
