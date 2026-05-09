@@ -41,6 +41,9 @@ export default function CaloriesScreen() {
     const [foods, setFoods] = useState<any[]>([]);
     const [foodName, setFoodName] = useState('');
     const [foodCalories, setFoodCalories] = useState('');
+    const [aiMeal, setAiMeal] = useState('');
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiResponse, setAiResponse] = useState('');
     const [eaten, setEaten] = useState(0);
 
     //Food search
@@ -49,6 +52,7 @@ export default function CaloriesScreen() {
     const [quantity, setQuantity] = useState('1');
     const qty = parseFloat(quantity || '1');
     const [frequentFoods, setFrequentFoods] = useState<any[]>([]);
+
 
     const { lang } = useLanguage();
     const t = translations[lang];
@@ -191,6 +195,78 @@ export default function CaloriesScreen() {
         setQuantity('1');
     };
 
+    const estimateCaloriesAI = async () => {
+        if (!aiMeal) return;
+
+        try {
+            setAiLoading(true);
+
+            const response = await fetch(
+                'https://openrouter.ai/api/v1/chat/completions',
+                {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${process.env.EXPO_PUBLIC_OPENROUTER_API_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: 'openrouter/free',
+                        messages: [
+                            {
+                                role: 'system',
+                                content:
+                                    'You estimate meal calories. Keep replies short and include estimated calories.',
+                            },
+                            {
+                                role: 'user',
+                                content: `
+    Estimate calories for this meal:
+
+    ${aiMeal}
+
+    Assume average serving size.
+    `,
+                            },
+                        ],
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            console.log(data);
+
+            // 🔥 show real API errors
+            if (data.error) {
+                alert(data.error.message);
+                return;
+            }
+
+            const text =
+                data?.choices?.[0]?.message?.content || '';
+
+            const numbers = text.match(/\d+/g);
+
+            const estimatedCalories =
+                numbers?.find((n: string) => parseInt(n) > 50);
+
+            if (estimatedCalories) {
+                setFoodCalories(estimatedCalories);
+                setFoodName(aiMeal);
+            }
+
+
+            console.log(text);
+            setAiResponse(text);
+
+        } catch (e) {
+            console.log(e);
+            alert('AI failed');
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
     // ❌ delete food
     const deleteFood = async (id: string) => {
         if (!user) return;
@@ -301,6 +377,70 @@ export default function CaloriesScreen() {
                 </TouchableOpacity>
             </View>
             )}
+        </View>
+
+        <View style={styles.card}>
+            <Text style={styles.sectionTitle}>
+                🤖 Describe Your Meal
+            </Text>
+
+            <TextInput
+                placeholder="ex: homemade beef noodle soup"
+                value={aiMeal}
+                onChangeText={setAiMeal}
+                style={styles.input}
+                multiline
+            />
+
+            <TouchableOpacity
+                style={styles.btn}
+                onPress={estimateCaloriesAI}
+            >
+                <Text style={styles.btnText}>
+                    {aiLoading
+                        ? 'Estimating...'
+                        : '✨ Estimate Calories'}
+                </Text>
+            </TouchableOpacity>
+
+            {aiResponse ? (
+                <View
+                    style={{
+                        marginTop: 16,
+                        backgroundColor: '#F2F2F7',
+                        borderRadius: 16,
+                        padding: 14,
+                    }}
+                >
+                    <Text
+                        style={{
+                            fontSize: 16,
+                            fontWeight: '700',
+                            marginBottom: 10,
+                        }}
+                    >
+                        🤖 AI Analysis
+                    </Text>
+
+                    <ScrollView
+                        style={{
+                            maxHeight: 180,
+                        }}
+                        nestedScrollEnabled={true}
+                        showsVerticalScrollIndicator={true}
+                    >
+                        <Text
+                            style={{
+                                fontSize: 15,
+                                lineHeight: 24,
+                                color: '#333',
+                            }}
+                        >
+                            {aiResponse}
+                        </Text>
+                    </ScrollView>
+                </View>
+            ) : null}
         </View>
 
         {/* 🍱 FOOD INPUT */}

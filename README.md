@@ -1,78 +1,114 @@
-# 📱 Weight Tracker App
+# Weight Tracker App
 
-A modern **weight loss & calorie tracking app** built with **Expo (React Native)** and **Firebase**, featuring:
+A modern AI-powered weight loss and calorie tracking app built with Expo, React Native, and Firebase.
 
-* ⚖️ Weight tracking
-* 🔥 Calorie management
-* 📈 Interactive charts
-* ☁️ Real-time cloud sync
-* 🌍 English / Chinese support
+This app helps users:
+- Track weight progress
+- Visualize trends with charts
+- Calculate calorie targets
+- Log foods and meals
+- Estimate meal calories using AI
+- Switch between English and Chinese
+- Sync data in real-time with Firebase
 
-> ⚠️ Currently optimized for **iOS and Web only**. Android is not supported yet.
+> ⚠️ Currently optimized for **iOS and Web only**. Android support is not implemented yet.
 
 ---
 
 # ✨ Features
 
-## ⚖️ Weight Tracking
+## 📈 Weight Tracking
+- Daily weight logging
+- Edit & delete entries
+- Weight history timeline
+- Weekly/monthly chart view
+- Goal progress tracking
+- Streak tracking
+- Weekly average insights
 
-* Daily weight logging
-* Edit & delete entries
-* Weight history list
-* Goal weight tracking
-* Weekly average calculation
-* Consecutive logging streak system
+## 🍱 Calories Tracker
+- TDEE & calorie target calculator
+- Daily calorie tracking
+- Food logging system
+- Frequent foods quick-add
+- Remaining calories calculation
 
-## 📈 Interactive Chart
+## 🤖 AI Meal Estimation
+Describe your meal naturally and AI estimates calories automatically.
 
-* Weekly / Monthly views
-* Swipe gesture navigation
-* Goal line visualization
-* Tap chart points for details
+Examples:
+- "Homemade beef noodle soup"
+- "Chicken curry with rice"
+- "2 eggs and avocado toast"
 
-## 🔥 Calorie Tracking
+The AI:
+- Estimates calories
+- Generates short meal analysis
+- Autofills calorie inputs
 
-* TDEE calculator
-* Daily calorie target
-* Remaining calorie calculation
-* Food logging system
-* Smart food suggestions
-* Frequently eaten foods shortcuts
+Powered by OpenRouter AI API.
 
-## ☁️ Firebase Integration
-
-* Real-time Firestore sync
-* Persistent cloud storage
-* User-specific data separation
-* Auto authentication state handling
+---
 
 ## 🌍 Bilingual Support
+- English 🇺🇸
+- Chinese 中文 🇨🇳
 
-* English / Chinese toggle
-* Persistent language selection
-* Shared translation system
+Language preference is:
+- Stored locally
+- Synced to Firebase account
 
-## 👤 Account System
+---
 
-* User profile management
-* Goal weight setup
-* Diet level preferences
-* Language preferences
+## ☁️ Cloud Sync
+Using Firebase Firestore for:
+- Real-time syncing
+- Persistent user data
+- Multi-device support
+
+---
+
+## 🔐 Authentication
+Powered by Firebase Authentication.
+
+Supports:
+- Email login
+- Persistent sessions
 
 ---
 
 # 🛠 Tech Stack
 
-* **Frontend:** Expo + React Native
-* **Routing:** Expo Router
-* **Backend:** Firebase
+- React Native
+- Expo Router
+- Firebase
+- Firestore
+- Expo Haptics
+- React Native Chart Kit
+- OpenRouter AI
 
-  * Firestore
-  * Firebase Authentication
-* **Charts:** react-native-chart-kit
-* **Gestures:** react-native-gesture-handler
-* **Storage:** AsyncStorage
-* **Haptics:** expo-haptics
+---
+
+# 📱 Screens
+
+## Home
+- Weight tracking
+- Progress chart
+- Goal tracking
+- Insights & streaks
+
+## Calories
+- TDEE calculator
+- Food logging
+- AI calorie estimation
+- Daily intake tracking
+
+## Account
+- User profile
+- Goal weight
+- Height & DOB
+- Language switching
+- Weight loss intensity selection
 
 ---
 
@@ -80,95 +116,44 @@ A modern **weight loss & calorie tracking app** built with **Expo (React Native)
 
 ```bash
 app/
-  (tabs)/
-    home.tsx         # Weight tracking screen
-    calories.tsx     # Calories & food tracker
-    account.tsx      # Account settings
-
-  index.tsx          # Auth redirect
-  login.tsx          # Login screen
+ ├── (tabs)/
+ │    ├── home.tsx
+ │    ├── calories.tsx
+ │    ├── account.tsx
+ │
+ ├── login.tsx
+ └── index.tsx
 
 components/
-  WeightChart.tsx    # Interactive weight chart
+ └── WeightChart.tsx
+
+context/
+ └── LanguageContext.tsx
 
 css/
-  indexStyles.ts
-  weightChartStyles.ts
+ ├── accountStyles.ts
+ ├── caloriesStyles.ts
+ ├── indexStyles.ts
+ └── weightChartStyles.ts
 
 constants/
-  food.ts            # Food database
+ └── food.ts
 
-translations.ts      # Language dictionary
-
-firebase.ts          # Firebase config
-```
-
----
-
-# 🌍 Translation System
-
-The app uses a lightweight custom bilingual system:
-
-```ts
-const t = translations[lang];
-```
-
-Features:
-
-* Shared translation dictionary
-* Component-level language support
-* Persistent language saving using AsyncStorage
-
-Supported languages:
-
-* English 🇺🇸
-* 中文 🇨🇳
-
----
-
-# 🔥 Main Screens
-
-## 🏠 Home
-
-* Weight tracking
-* Progress chart
-* Goal tracking
-* Insights & streaks
-
-## 🍱 Calories
-
-* TDEE calculator
-* Daily calorie tracking
-* Food logging
-* Smart food recommendations
-
-## 👤 Account
-
-* User profile
-* Goal settings
-* Diet preferences
-* Language settings
-
----
-
-# ⚙️ Environment Variables
-
-Create a `.env` file:
-
-```env
-EXPO_PUBLIC_FIREBASE_API_KEY=
-EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=
-EXPO_PUBLIC_FIREBASE_PROJECT_ID=
-EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=
-EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-EXPO_PUBLIC_FIREBASE_APP_ID=
+translations.ts
+firebase.ts
 ```
 
 ---
 
 # 🚀 Getting Started
 
-## 1. Install dependencies
+## 1. Clone repository
+
+```bash
+git clone https://github.com/Rose-Wei10/weight-tracker-app.git
+```
+
+## 2. Install dependencies
 
 ```bash
 npm install
@@ -176,7 +161,43 @@ npm install
 
 ---
 
-## 2. Start the app
+## 3. Setup Firebase
+
+Create a Firebase project.
+
+Enable:
+- Authentication
+- Firestore Database
+
+Then create:
+
+```bash
+firebase.ts
+```
+
+and add your Firebase config.
+
+---
+
+## 4. Setup AI API Key
+
+Create:
+
+```bash
+.env
+```
+
+Add:
+
+```env
+EXPO_PUBLIC_OPENROUTER_API_KEY=your_api_key_here
+```
+
+Get API key from OpenRouter.
+
+---
+
+## 5. Start project
 
 ```bash
 npx expo start
@@ -184,43 +205,29 @@ npx expo start
 
 ---
 
-## 3. Run on
+# 📌 Notes
 
-* iOS Simulator 🍎
-* Web Browser 🌐
-
-> Android is currently unsupported.
-
----
-
-# 📊 Firebase Structure
-
-```bash
-users/
-  uid/
-    profile/
-    daily/
-    weights/
-    foods/
-```
+- Designed mainly for personal weight-loss tracking
+- Uses real-time Firestore syncing
+- AI calorie estimates are approximate only
+- iOS & Web focused
+- Android support planned later
 
 ---
 
-# 🎯 Future Improvements
+# 🔮 Planned Features
 
-* Apple Health integration
-* Dark mode
-* Better chart animations
-* AI food recognition
-* Barcode scanning
-* Nutrition breakdown
-* Data export (CSV / PDF)
+- AI food photo recognition
+- Better nutrition analytics
+- Weekly reports
+- Dark mode
+- HealthKit integration
+- Smarter AI coaching
+- Macro tracking
+- Push notifications
 
 ---
 
-# 👤 Author
+# 👩‍💻 Author
 
-Rong Wei
-
-GitHub:
-[Rose-Wei10](https://github.com/Rose-Wei10?utm_source=chatgpt.com)
+Created by Rose Wei
