@@ -1,157 +1,132 @@
-import { useRouter } from 'expo-router';
+import { useState } from "react";
+import { Redirect } from "expo-router";
 import {
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
-} from 'firebase/auth';
-import { useState } from 'react';
+} from "firebase/auth";
+import { auth } from "../firebase";
+import { useApp } from "../context/AppContext";
+import { useCopy, useLanguage } from "../context/LanguageContext";
 import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  ActivityIndicator,
-} from 'react-native';
-import { auth } from '../firebase';
-
-export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const router = useRouter();
-
-  // ✅ LOGIN
-  const handleLogin = async () => {
-    if (!email || !password) {
-      alert('Please enter email and password');
+  Button,
+  Card,
+  Choices,
+  Copy,
+  Field,
+  Notice,
+  Screen,
+} from "../components/Wellness";
+import { friendlyError } from "../services/errors";
+export default function Login() {
+  const [email, setEmail] = useState(""),
+    [password, setPassword] = useState(""),
+    [busy, setBusy] = useState(false),
+    [message, setMessage] = useState(""),
+    [register, setRegister] = useState(false);
+  const { user } = useApp(),
+    { lang, setLang } = useLanguage(),
+    x = useCopy();
+  if (user) return <Redirect href="/home" />;
+  const submit = async (reset = false) => {
+    setMessage("");
+    if (!email.includes("@") || (!reset && password.length < 6)) {
+      setMessage(
+        x(
+          "Enter a valid email and a password of at least 6 characters.",
+          "请输入有效邮箱，密码至少6位。",
+        ),
+      );
       return;
     }
-
+    setBusy(true);
     try {
-      setLoading(true);
-
-      await signInWithEmailAndPassword(auth, email.trim(), password);
-
-      console.log('✅ Logged in');
-
-      // 🔥 IMPORTANT: redirect to home
-      router.replace('/');
-    } catch (e: any) {
-    //   console.log(e);
-    //   alert(e.message);
+      if (reset) {
+        await sendPasswordResetEmail(auth, email.trim());
+        setMessage(
+          x(
+            "If an account exists, a reset email will arrive shortly.",
+            "如果该账户存在，你将收到密码重置邮件。",
+          ),
+        );
+      } else if (register)
+        await createUserWithEmailAndPassword(auth, email.trim(), password);
+      else await signInWithEmailAndPassword(auth, email.trim(), password);
+    } catch (e) {
+      setMessage(friendlyError(e, lang === "zh"));
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   };
-
-  // ✅ REGISTER
-  const handleRegister = async () => {
-    if (!email || !password) {
-      alert('Please enter email and password');
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      await createUserWithEmailAndPassword(auth, email.trim(), password);
-
-      console.log('✅ Registered');
-
-      // 🔥 IMPORTANT: redirect after register
-      router.replace('/');
-    } catch (e: any) {
-    //   console.log(e);
-
-      // nicer messages
-      if (e.code === 'auth/email-already-in-use') {
-        alert('Email already registered. Try logging in.');
-      } else if (e.code === 'auth/weak-password') {
-        alert('Password should be at least 6 characters.');
-      } else {
-        alert(e.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Weight Tracker</Text>
-
-      <TextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        style={styles.input}
+    <Screen
+      title={x("Feel more like you.", "更懂自己的每一天。")}
+      eyebrow="FORMA / WELLNESS, AT YOUR PACE"
+      subtitle={x(
+        "A thoughtful space for food, weight, and everyday wellbeing.",
+        "从饮食与体重开始，关爱日常健康。",
+      )}
+    >
+      <Choices
+        value={lang}
+        onChange={setLang}
+        options={[
+          { value: "en", label: "English" },
+          { value: "zh", label: "中文" },
+        ]}
       />
-
-      <TextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
-      />
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleLogin}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.text}>Login</Text>
+      <Card>
+        <Copy kind="heading">
+          {register
+            ? x("Create your account", "创建账户")
+            : x("Welcome back", "欢迎回来")}
+        </Copy>
+        <Field
+          label={x("Email", "邮箱")}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+        />
+        <Field
+          label={x("Password", "密码")}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoComplete={register ? "new-password" : "current-password"}
+        />
+        {message && <Notice text={message} />}
+        <Button
+          title={
+            register ? x("Create account", "创建账户") : x("Sign in", "登录")
+          }
+          busy={busy}
+          onPress={() => void submit()}
+        />
+        <Button
+          title={
+            register
+              ? x("Already have an account? Sign in", "已有账户？登录")
+              : x("New here? Create an account", "首次使用？创建账户")
+          }
+          secondary
+          disabled={busy}
+          onPress={() => setRegister(!register)}
+        />
+        <Button
+          title={x("Forgot password?", "忘记密码？")}
+          secondary
+          disabled={busy}
+          onPress={() => void submit(true)}
+        />
+      </Card>
+      <Copy kind="muted">
+        {x(
+          "For adults 18+. Nutrition estimates support general wellbeing and are not medical advice. AI sharing is optional and requires consent.",
+          "适用于18岁以上成人。营养估算用于一般健康参考，不构成医疗建议。AI 信息分享为可选功能，需先征得同意。",
         )}
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: '#34A853' }]}
-        onPress={handleRegister}
-        disabled={loading}
-      >
-        <Text style={styles.text}>Register</Text>
-      </TouchableOpacity>
-    </View>
+      </Copy>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#f5f7fb',
-  },
-  title: {
-    fontSize: 32,
-    textAlign: 'center',
-    marginBottom: 30,
-    fontWeight: '700',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#eee',
-    padding: 12,
-    marginBottom: 12,
-    borderRadius: 10,
-    backgroundColor: '#fff',
-  },
-  button: {
-    backgroundColor: '#4A90E2',
-    padding: 14,
-    borderRadius: 10,
-    marginTop: 10,
-    alignItems: 'center',
-  },
-  text: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-});
