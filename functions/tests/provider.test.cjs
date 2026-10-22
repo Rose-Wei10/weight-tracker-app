@@ -1,0 +1,14 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');
+const {callProvider}=require('../lib/functions/src/provider');const {reserveUsage,unsafeRequest}=require('../lib/functions/src/policy');
+const input={mode:'meal',text:'Two eggs',language:'en'},result={items:[{name:'Eggs',calories:144,protein:12.6,carbs:0.8,fat:9.6,quantity:2}],answer:'Approximate estimate.'};
+const response=value=>new Response(JSON.stringify({choices:[{message:{content:JSON.stringify(value)}}]}));
+test('provider sends strict schema, privacy filters and bounded output',async()=>{let args;const data=await callProvider(input,'test-key','configured-model',async(...a)=>{args=a;return response(result);});assert.deepEqual(data,result);const b=JSON.parse(args[1].body);assert.equal(b.max_tokens,1600);assert.equal(b.provider.zdr,true);assert.equal(b.provider.data_collection,'deny');assert.equal(b.response_format.json_schema.strict,true);assert.equal(b.provider.allow_fallbacks,false);});
+test('malformed JSON is rejected without retry',async()=>{let calls=0;await assert.rejects(()=>callProvider(input,'key','model',async()=>{calls++;return new Response('{bad');}));assert.equal(calls,1);});
+test('negative nutritional values rejected',async()=>{await assert.rejects(()=>callProvider(input,'key','model',async()=>response({...result,items:[{...result.items[0],calories:-1}]})));});
+test('transient failures retry once',async()=>{let calls=0;await callProvider(input,'key','model',async()=>++calls===1?new Response('',{status:503}):response(result),async()=>{});assert.equal(calls,2);});
+test('permanent failures are not retried',async()=>{let calls=0;await assert.rejects(()=>callProvider(input,'key','model',async()=>{calls++;return new Response('',{status:401});}));assert.equal(calls,1);});
+test('repeated transient failure stops at two calls',async()=>{let calls=0;await assert.rejects(()=>callProvider(input,'key','model',async()=>{calls++;return new Response('',{status:429});},async()=>{}));assert.equal(calls,2);});
+test('assistant never returns loggable food items',async()=>{const value=await callProvider({...input,mode:'assistant'},'key','model',async()=>response(result));assert.deepEqual(value.items,[]);});
+test('quota resets at UTC day boundary and enforces daily maximum',()=>{const now=Date.parse('2026-10-21T23:59:59Z');assert.throws(()=>reserveUsage({day:'2026-10-21',count:10},now));assert.equal(reserveUsage({day:'2026-10-21',count:10},now+2000).count,1);});
+test('quota minute limits hold across requests',()=>{const now=Date.now(),first=reserveUsage({},now),second=reserveUsage(first,now);assert.throws(()=>reserveUsage(second,now));assert.equal(reserveUsage(second,now+60000).burst,1);});
+test('dangerous requests in either language are intercepted',()=>{assert.equal(unsafeRequest('only 500 calories per day'),true);assert.equal(unsafeRequest('如何催吐'),true);assert.equal(unsafeRequest('balanced lunch ideas'),false);});
