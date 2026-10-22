@@ -1,9 +1,17 @@
 export function friendlyError(error: unknown, zh = false): string {
   const code = (error as { code?: string })?.code || "";
+  if (code.includes("unsafe-goal"))
+    return zh
+      ? "这个减重目标需要专业人士的个性化建议。可以选择维持目标或调整目标。"
+      : "This loss goal needs individualized professional guidance. Choose maintenance or adjust your goal.";
+  if (code.includes("failed-precondition"))
+    return zh
+      ? "AI 需要已验证的邮箱及正确配置的服务和设备验证。请查看设置文档。"
+      : "AI needs a verified email and configured service/device attestation. See the setup guide.";
   if (code.includes("resource-exhausted"))
     return zh
-      ? "今日 AI 次数已用完，请明天再试。"
-      : "AI usage limit reached. Please try again tomorrow.";
+      ? "已达到 AI 使用上限，请稍等一分钟或明天再试。"
+      : "AI usage limit reached. Wait a minute or try again tomorrow.";
   if (
     code.includes("unauthenticated") ||
     code.includes("requires-recent-login")

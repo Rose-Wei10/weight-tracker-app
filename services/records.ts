@@ -87,6 +87,10 @@ export async function saveProfile(
   units: "metric" | "imperial",
 ) {
   profileSchema.parse(profile);
+  if (goal < profile.weight && goal / (profile.height / 100) ** 2 < 18.5)
+    throw Object.assign(new Error("Goal requires individual guidance"), {
+      code: "unsafe-goal",
+    });
   weightSchema.shape.weight.parse(goal);
   await setDoc(
     userRef(),

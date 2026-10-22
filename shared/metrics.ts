@@ -66,6 +66,11 @@ export function calorieEstimate(
     ![1.2, 1.375, 1.55, 1.725].includes(activity)
   )
     throw new Error("Check your adult profile values");
+  if (intent === "lose" && bmi(weight, height) < 18.5)
+    throw Object.assign(
+      new Error("A loss target needs individual professional guidance"),
+      { code: "unsafe-goal" },
+    );
   const tdee = Math.round(
     (10 * weight + 6.25 * height - 5 * age + (gender === "male" ? 5 : -161)) *
       activity,

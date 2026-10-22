@@ -1,6 +1,7 @@
 const {test,after}=require('node:test');const assert=require('node:assert/strict');
 const {initializeApp,deleteApp}=require('firebase/app');const {getAuth,connectAuthEmulator,createUserWithEmailAndPassword}=require('firebase/auth');const {getFunctions,connectFunctionsEmulator,httpsCallable}=require('firebase/functions');const {getFirestore,connectFirestoreEmulator,doc,setDoc}=require('firebase/firestore');
-const adminApp=require('../../functions/node_modules/firebase-admin/app');const adminFirestore=require('../../functions/node_modules/firebase-admin/firestore');const adminAuth=require('../../functions/node_modules/firebase-admin/auth');
+const serverRequire=require('node:module').createRequire(require('node:path').resolve('functions/package.json'));
+const adminApp=serverRequire('firebase-admin/app');const adminFirestore=serverRequire('firebase-admin/firestore');const adminAuth=serverRequire('firebase-admin/auth');
 if(process.env.FIRESTORE_EMULATOR_HOST!=='127.0.0.1:8080'||process.env.FIREBASE_AUTH_EMULATOR_HOST!=='127.0.0.1:9099')throw new Error('Local emulators required');
 const apps=[];function client(){const app=initializeApp({apiKey:'demo-not-a-secret',projectId:'demo-weight-tracker',appId:'demo-app'},'test-'+apps.length);apps.push(app);const auth=getAuth(app),db=getFirestore(app),fn=getFunctions(app);connectAuthEmulator(auth,'http://127.0.0.1:9099',{disableWarnings:true});connectFirestoreEmulator(db,'127.0.0.1',8080);connectFunctionsEmulator(fn,'127.0.0.1',5002);return {auth,db,fn};}
 const server=adminApp.initializeApp({projectId:'demo-weight-tracker'}),store=adminFirestore.getFirestore(server);after(async()=>{await Promise.all(apps.map(deleteApp));await adminApp.deleteApp(server);});

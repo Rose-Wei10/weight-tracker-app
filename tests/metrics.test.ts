@@ -153,3 +153,10 @@ test("AI schema rejects incomplete free text responses", () =>
       items: [{ name: "Meal" }],
     }).success,
   ).toBe(false));
+
+test("loss estimates below adult screening threshold require individual guidance", () =>
+  expect(() => calorieEstimate(45, 175, 30, "female", 1.2, "lose")).toThrow());
+test("maintenance remains available without prescribing a loss target", () =>
+  expect(
+    calorieEstimate(45, 175, 30, "female", 1.2, "maintain").target,
+  ).toBeGreaterThanOrEqual(1200));

@@ -28,7 +28,10 @@ export default function WeightChart({
     entries = inRange(daily, Number(range), end),
     averages = inRange(movingAverage(daily), Number(range), end);
   const value = (w: number) => Number(displayWeight(w, units));
-  const chartWidth = Math.max(width, entries.length * 22);
+  const chartWidth = Math.max(
+    width,
+    entries.length > 90 ? entries.length * 5 : width,
+  );
   return (
     <View
       style={{ gap: 14 }}
@@ -50,6 +53,14 @@ export default function WeightChart({
           <Copy kind="muted">
             {entries[0].date} — {entries.at(-1)!.date}
           </Copy>
+          <View style={{ flexDirection: "row", gap: 16, flexWrap: "wrap" }}>
+            <Copy kind="muted" style={{ color: c.primary }}>
+              ● {x("Weight", "体重")}
+            </Copy>
+            <Copy kind="muted" style={{ color: c.accent }}>
+              — {x("7-day mean", "7日均值")}
+            </Copy>
+          </View>
           <ScrollView horizontal showsHorizontalScrollIndicator>
             <LineChart
               width={chartWidth}
@@ -73,7 +84,6 @@ export default function WeightChart({
                     withDots: false,
                   },
                 ],
-                legend: [x("Weight", "体重"), x("7-day mean", "7日均值")],
               }}
               chartConfig={{
                 backgroundGradientFrom: c.surface,
@@ -81,8 +91,14 @@ export default function WeightChart({
                 decimalPlaces: 1,
                 color: () => c.primary,
                 labelColor: () => c.muted,
-                propsForDots: { r: "4" },
+                propsForDots: { r: entries.length > 31 ? "2" : "3" },
+                propsForBackgroundLines: {
+                  stroke: c.border,
+                  strokeDasharray: "0",
+                  strokeWidth: 1,
+                },
               }}
+              withVerticalLines={false}
               withOuterLines={false}
               withShadow={false}
               onDataPointClick={({ index, value: v }) =>

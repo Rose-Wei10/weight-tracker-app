@@ -63,7 +63,10 @@ export default function NutritionChart({
           </Copy>
           <ScrollView horizontal>
             <LineChart
-              width={Math.max(width, dates.length * 24)}
+              width={Math.max(
+                width,
+                dates.length > 90 ? dates.length * 5 : width,
+              )}
               height={210}
               data={{
                 labels: dates.map((date, i) =>
@@ -80,7 +83,13 @@ export default function NutritionChart({
                 labelColor: () => c.muted,
                 decimalPlaces: 0,
                 propsForDots: { r: "3" },
+                propsForBackgroundLines: {
+                  stroke: c.border,
+                  strokeDasharray: "0",
+                  strokeWidth: 1,
+                },
               }}
+              withVerticalLines={false}
               withShadow={false}
               withOuterLines={false}
               onDataPointClick={({ index, value }) =>
