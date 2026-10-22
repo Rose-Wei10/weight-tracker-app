@@ -2,7 +2,10 @@ name: Validate app
 on:
   pull_request:
   push:
-    branches: [main, "feat/**"]
+    branches: [main]
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
