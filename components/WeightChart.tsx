@@ -1,202 +1,126 @@
-import React, { useMemo, useState } from 'react';
+import { useState } from "react";
+import { ScrollView, View } from "react-native";
+import { LineChart } from "react-native-chart-kit";
+import { useCopy } from "../context/LanguageContext";
+import { Copy, Choices, usePalette } from "./Wellness";
 import {
-    Dimensions,
-    Text,
-    TouchableOpacity,
-    View
-} from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
-import { PanGestureHandler } from 'react-native-gesture-handler';
-import { styles } from '../css/weightChartStyles';
-import { Lang, translations } from '../translations';
-
-type Props = {
-  history: any[];
-  goal: string;
-  lang: Lang;
-  user?: any;
-  loading?: boolean;
-};
-
-export default function WeightChart({ history = [], goal, lang }: Props) {
-    const screenWidth = Dimensions.get('window').width;
-    const chartWidth = screenWidth - 70;
-    const t = translations[lang];
-
-  // 📊 State
-    const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
-    const [currentDate, setCurrentDate] = useState(new Date());
-    const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-
-    // 📅 Filter data based on view
-    const filtered = useMemo(() => {
-        if (!history || history.length === 0) return [];
-
-        const now = new Date(currentDate);
-
-        let result = [];
-
-        if (viewMode === 'week') {
-            const start = new Date(now);
-            start.setDate(now.getDate() - 6);
-
-            result = history.filter((h: any) => {
-            const d = new Date(h.date);
-            return d >= start && d <= now;
-            });
-        } else {
-            result = history.filter((h: any) => {
-            const d = new Date(h.date);
-            return (
-                d.getMonth() === now.getMonth() &&
-                d.getFullYear() === now.getFullYear()
-            );
-            });
-        }
-
-    // ✅ FALLBACK (THIS FIXES YOUR BUG)
-    if (result.length === 0) {
-        return history.slice(-7);
-    }
-
-    return result;
-    }, [history, currentDate, viewMode]);
-
-  // 🧠 Chart data
-  const labels = filtered.map((h: any) =>
-    h.date ? h.date.slice(5) : ''
+  dailyWeights,
+  displayWeight,
+  inRange,
+  movingAverage,
+} from "../shared/metrics";
+import type { Weight } from "../shared/schemas";
+export default function WeightChart({
+  history,
+  units = "metric",
+  end,
+}: {
+  history: Weight[];
+  units?: string;
+  end: string;
+}) {
+  const [range, setRange] = useState("30"),
+    [selected, setSelected] = useState<string>(""),
+    [width, setWidth] = useState(300);
+  const c = usePalette(),
+    x = useCopy();
+  const daily = dailyWeights(history),
+    entries = inRange(daily, Number(range), end),
+    averages = inRange(movingAverage(daily), Number(range), end);
+  const value = (w: number) => Number(displayWeight(w, units));
+  const chartWidth = Math.max(
+    width,
+    entries.length > 90 ? entries.length * 5 : width,
   );
-
-  const weights = filtered.map((h: any) => h.weight);
-
-  // Prevent empty crash
-  if (!filtered.length) {
-    return (
-      <View style={styles.emptyBox}>
-        <Text style={{ color: '#999' }}>No data yet</Text>
-      </View>
-    );
-  }
-
-  // 📈 Chart dataset
-    const goalNumber = parseFloat(goal);
-
-    const data = {
-    labels,
-    datasets: [
-        {
-        data: weights,
-        strokeWidth: 3,
-        },
-        ...(goalNumber
-        ? [
-            {
-                data: weights.map(() => goalNumber),
-                withDots: true,
-                color: () => 'red',
-                strokeWidth: 2,
-            },
-            ]
-        : []),
-    ],
-    };
-
-  // 👆 Swipe handling
-  const handleSwipe = (e: any) => {
-    const dx = e.nativeEvent.translationX;
-
-    const newDate = new Date(currentDate);
-
-    if (dx < -50) {
-        newDate.setDate(newDate.getDate() + 7);
-    } else if (dx > 50) {
-        newDate.setDate(newDate.getDate() - 7);
-    }
-
-    // 🚫 prevent going too far future
-    const today = new Date();
-    if (newDate > today) return;
-
-    setCurrentDate(newDate);
-    };
-
   return (
-    <View>
-      {/* 📅 Range */}
-      <Text style={styles.rangeText}>
-        {labels[0]} - {labels[labels.length - 1]}
-      </Text>
-
-      {/* 🔘 Toggle */}
-      <View style={styles.toggleRow}>
-        <TouchableOpacity onPress={() => setViewMode('week')}>
-          <Text
-            style={viewMode === 'week' ? styles.activeTab : styles.tab}
-          >
-            {t.week}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => setViewMode('month')}>
-          <Text
-            style={viewMode === 'month' ? styles.activeTab : styles.tab}
-          >
-            {t.month}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* 📊 Chart */}
-      <PanGestureHandler onEnded={handleSwipe}>
-        <View style={{marginLeft: -10}}>
-          <LineChart
-            data={data}
-            width={chartWidth}
-            height={220}
-            withDots
-            withInnerLines
-            withOuterLines={false}
-            withShadow={true}
-            fromZero={false}
-            segments={4}
-            chartConfig={{
-              backgroundGradientFrom: '#fff',
-              backgroundGradientTo: '#fff',
-              decimalPlaces: 1,
-              color: () => '#007AFF',
-              labelColor: () => '#999',
-              propsForDots: {
-                r: '5',
-              },
-            }}
-            
-            onDataPointClick={({ index }) => {
-              setSelectedIndex(index);
-            }}
-            style={{
-              borderRadius: 16,
-            }}
-          />
-
-          {/* 📍 Tooltip */}
-          {selectedIndex !== null && filtered[selectedIndex] && (
-            <View style={styles.tooltip}>
-              <Text style={styles.tooltipText}>
-                {filtered[selectedIndex].weight} kg
-              </Text>
-              <Text style={styles.tooltipDate}>
-                {filtered[selectedIndex].date}
-              </Text>
-            </View>
-          )}
-        </View>
-      </PanGestureHandler>
-
-      {/* 📊 Latest */}
-      <Text style={styles.latest}>
-        {weights[weights.length - 1]} kg
-      </Text>
-      <Text style={styles.sub}>{t.latest}</Text>
+    <View
+      style={{ gap: 14 }}
+      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+    >
+      <Choices
+        value={range}
+        onChange={(v) => {
+          setRange(v);
+          setSelected("");
+        }}
+        options={["7", "30", "90", "0"].map((v) => ({
+          value: v,
+          label: v === "0" ? x("All", "全部") : `${v}${x("d", "天")}`,
+        }))}
+      />
+      {entries.length ? (
+        <>
+          <Copy kind="muted">
+            {entries[0].date} — {entries.at(-1)!.date}
+          </Copy>
+          <View style={{ flexDirection: "row", gap: 16, flexWrap: "wrap" }}>
+            <Copy kind="muted" style={{ color: c.primary }}>
+              ● {x("Weight", "体重")}
+            </Copy>
+            <Copy kind="muted" style={{ color: c.accent }}>
+              — {x("7-day mean", "7日均值")}
+            </Copy>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator>
+            <LineChart
+              width={chartWidth}
+              height={220}
+              data={{
+                labels: entries.map((e, i) =>
+                  i % Math.max(1, Math.ceil(entries.length / 5)) === 0
+                    ? e.date.slice(5)
+                    : "",
+                ),
+                datasets: [
+                  {
+                    data: entries.map((e) => value(e.weight)),
+                    color: () => c.primary,
+                    strokeWidth: 3,
+                  },
+                  {
+                    data: averages.map((e) => value(e.weight)),
+                    color: () => c.accent,
+                    strokeWidth: 2,
+                    withDots: false,
+                  },
+                ],
+              }}
+              chartConfig={{
+                backgroundGradientFrom: c.surface,
+                backgroundGradientTo: c.surface,
+                decimalPlaces: 1,
+                color: () => c.primary,
+                labelColor: () => c.muted,
+                propsForDots: { r: entries.length > 31 ? "2" : "3" },
+                propsForBackgroundLines: {
+                  stroke: c.border,
+                  strokeDasharray: "0",
+                  strokeWidth: 1,
+                },
+              }}
+              withVerticalLines={false}
+              withOuterLines={false}
+              withShadow={false}
+              onDataPointClick={({ index, value: v }) =>
+                setSelected(
+                  `${entries[index].date} · ${v.toFixed(1)} ${units === "imperial" ? "lb" : "kg"}`,
+                )
+              }
+            />
+          </ScrollView>
+          <Copy accessibilityLiveRegion="polite" kind="muted">
+            {selected ||
+              x(
+                "Tap a point to inspect. Missing days are not zero.",
+                "点击数据点查看。未记录日期不计为零。",
+              )}
+          </Copy>
+        </>
+      ) : (
+        <Copy kind="muted">
+          {x("No entries in this range.", "此时间范围内暂无记录。")}
+        </Copy>
+      )}
     </View>
   );
 }

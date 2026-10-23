@@ -1,0 +1,61 @@
+name: Validate app
+on:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint -- --max-warnings=0
+      - run: npm test -- --coverage --runInBand
+      - run: npx expo install --check
+      - run: npm ci --prefix functions
+      - run: npm run build --prefix functions
+      - run: npm test --prefix functions
+      - run: npx expo export --platform all
+        env:
+          EXPO_PUBLIC_FIREBASE_API_KEY: demo-not-a-secret
+          EXPO_PUBLIC_FIREBASE_PROJECT_ID: demo-weight-tracker
+          EXPO_PUBLIC_FIREBASE_APP_ID: demo-app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-bundles
+          path: dist
+  firestore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm ci --prefix functions
+      - run: npm run build --prefix functions
+      - run: node scripts/configure-emulators.cjs
+      - run: npx playwright install chromium --with-deps
+      - run: npx --yes firebase-tools@14.22.0 emulators:exec --only auth,firestore,functions --project demo-weight-tracker 'npm run test:rules && npm run test:functions:integration && node scripts/seed-demo.cjs && npm run test:e2e'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-flow-results
+          path: |
+            test-results
+            docs/screenshots

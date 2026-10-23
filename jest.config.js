@@ -1,0 +1,1 @@
+module.exports = { preset: 'jest-expo', setupFiles: ['<rootDir>/tests/setup.js'], testMatch: ['**/tests/**/*.test.ts','**/tests/**/*.test.tsx'], testPathIgnorePatterns: ['/node_modules/','/functions/','/tests/firestore/'], collectCoverageFrom: ['shared/*.ts','services/records.ts','services/errors.ts'], coverageDirectory: 'coverage' };

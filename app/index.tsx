@@ -1,33 +1,9 @@
-import { useRouter } from 'expo-router';
-import { onAuthStateChanged } from 'firebase/auth';
-import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
-import { auth } from '../firebase';
-
+import { Redirect } from "expo-router";
+import { ActivityIndicator } from "react-native";
+import { useApp } from "../context/AppContext";
 export default function Index() {
-  const router = useRouter();
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.replace('/home');
-      } else {
-        router.replace('/login');
-      }
-    });
-
-    return unsub;
-  }, []);
-
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
-      <ActivityIndicator size="large" />
-    </View>
-  );
+  const { user, authReady } = useApp();
+  if (!authReady)
+    return <ActivityIndicator accessibilityLabel="Loading session" />;
+  return <Redirect href={user ? "/home" : "/login"} />;
 }

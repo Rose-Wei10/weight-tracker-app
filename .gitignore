@@ -42,3 +42,18 @@ app-example
 # generated native folders
 /ios
 /android
+
+.env*
+!.env.example
+functions/lib/
+coverage/
+*-debug.log
+artifacts/
+
+playwright-report/
+test-results/
+
+google-services.json
+GoogleService-Info.plist
+
+.secret.local
