@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useApp } from "../../context/AppContext";
 import { useCopy } from "../../context/LanguageContext";
 import { usePalette } from "../../components/Wellness";
-import { HapticTab } from "../../components/haptic-tab";
+// import { HapticTab } from "../../components/haptic-tab";
 export default function TabLayout() {
   const { user, authReady } = useApp(),
     c = usePalette(),
@@ -22,7 +22,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarButton: HapticTab,
+        // tabBarButton: HapticTab,
         tabBarActiveTintColor: c.primary,
         tabBarInactiveTintColor: c.muted,
         tabBarStyle: { backgroundColor: c.surface, borderTopColor: c.border },

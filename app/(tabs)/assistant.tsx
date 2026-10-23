@@ -227,7 +227,8 @@ export default function Assistant() {
             multiline
             maxLength={1600}
           />
-        )}{" "}
+        )}
+        {/* {" "} */}
         {mode === "meal" && (
           <>
             <View style={layout.row}>

@@ -18,9 +18,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     plugins: [
       ...(config.plugins || []),
+      "expo-build-properties",
+      "expo-font",
+      "expo-image",
+      "expo-sharing",
+      "expo-status-bar",
       "@react-native-firebase/app",
       "@react-native-firebase/app-check",
       ["expo-build-properties", { ios: { useFrameworks: "static" } }],
     ],
+    
   };
 };

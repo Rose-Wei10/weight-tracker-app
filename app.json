@@ -7,7 +7,7 @@
     "icon": "./assets/images/forma-icon.png",
     "scheme": "weighttracker",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    // "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.weir0210.weight-tracker",
@@ -20,7 +20,7 @@
         "foregroundImage": "./assets/images/forma-icon.png",
         "backgroundColor": "#F5F6F0"
       },
-      "edgeToEdgeEnabled": true,
+      // "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.weir0210.weighttracker"
     },
